@@ -3,6 +3,12 @@
 * Recebe, trata e responde aos dados enviados pelo cliente
 */
 
+#ifndef REQUEST
+#define REQUEST
+
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 // Variáveis externas usadas pela função request
 extern char headers[500],
@@ -13,3 +19,5 @@ extern char headers[500],
 
 // A função recebe o método de requisição http e o caminho do recurso desejado
 int request(char *method, char *path);
+
+#endif

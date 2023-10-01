@@ -1,3 +1,5 @@
 #!/bin/bash
 
-gcc -Wall *.c ./http/*.c -o ./bin/server && sudo ./bin/server
+gcc -Wall -Wreturn-type -Wextra *.c ./http/*.c ./http/get/*.c ./utils/*.c -o ./bin/server &&
+
+sudo ./bin/server

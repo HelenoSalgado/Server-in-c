@@ -1,9 +1,6 @@
 #include "./../config.h"
 #include "verifyMimeType.h"
 
-#include <string.h>
-#include <regex.h>
-
 int verifyMimeType(char *path){
 
     regex_t preg;

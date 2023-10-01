@@ -1,13 +1,6 @@
 #include "./../config.h"
 #include "create-socket.h"
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <string.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <stdlib.h>
-
 int createSocket(){
 
     int socket_descriptor;
@@ -33,11 +26,13 @@ int createSocket(){
         exit(1);
     }
 
-    if (bind(socket_descriptor, server->ai_addr, server->ai_addrlen));
+    bind(socket_descriptor, server->ai_addr, server->ai_addrlen);
 
     listen(socket_descriptor, 3);
 
-    printf("%s\n", "Server running...");
+    printf("%s\n", "");
+    printf("%s%s %s\n", "🏁 Server running in port: ", PORT, "🚀");
+    printf("%s\n", "");
 
     return socket_descriptor;
 }

@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <stdlib.h>
 
 // Cria o socket de conexções e retorna um socket descriptor (número inteiro);

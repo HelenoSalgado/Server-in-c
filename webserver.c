@@ -8,8 +8,11 @@ int main(){
   // Cria socket e devolve seu descritor
   int socket_descriptor = createSocket();
 
+  printf("%s\n", "");
+  printf("%s%d %s\n", "🏁 Server running in port: ", PORT, "🚀");
+  printf("%s\n", "");
 
-  for (;;)
+  while(1)
   {
 
     int client_fd = accept( socket_descriptor, (struct sockaddr *)&client_addr, &addr_size );
@@ -20,7 +23,7 @@ int main(){
       char bufferClient[BUFFER_SIZE], method[4];
 
       // Ler e reflete os dados enviados pelo client para o buffer do client
-      read(client_fd, bufferClient, sizeof(bufferClient));
+      recv(client_fd, &bufferClient, sizeof(bufferClient), MSG_WAITALL);
 
       // Copia os três primeiros caracteres do buffer do client para method
       strncpy(method, bufferClient, 3);
@@ -35,7 +38,7 @@ int main(){
       snprintf(data, sizeof(data), "%s%s", headers, buffer);
 
       // Os dados concatenados resultantes da requisação são escritos no arquivo descritor do cliente
-      write(client_fd, data, strlen(data));
+      send(client_fd, data, strlen(data), 0);
 
       //Exibe o buffer do cliente no terminal
       printf("%s\n", bufferClient);

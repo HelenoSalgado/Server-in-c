@@ -4,15 +4,21 @@ int main(){
 
   struct sockaddr_storage client_addr;
   socklen_t addr_size = sizeof(client_addr);
+  struct tm *local;
+  time_t t;
+
+  t = time(NULL);
+  local = localtime(&t);
 
   // Cria socket e devolve seu descritor
   int socket_descriptor = createSocket();
 
   printf("%s\n", "");
-  printf("%s%d %s\n", "🏁 Server running in port: ", PORT, "🚀");
+  printf("%s%d\n", "Server running in port: ", PORT);
+  printf("%s\n", asctime(local));
   printf("%s\n", "");
 
-  while(1)
+  for(;;)
   {
 
     int client_fd = accept( socket_descriptor, (struct sockaddr *)&client_addr, &addr_size );
@@ -23,7 +29,7 @@ int main(){
       char bufferClient[BUFFER_SIZE], method[4];
 
       // Ler e reflete os dados enviados pelo client para o buffer do client
-      recv(client_fd, &bufferClient, sizeof(bufferClient), MSG_WAITALL);
+      recv(client_fd, &bufferClient, sizeof(bufferClient), 0);
 
       // Copia os três primeiros caracteres do buffer do client para method
       strncpy(method, bufferClient, 3);
@@ -40,8 +46,11 @@ int main(){
       // Os dados concatenados resultantes da requisação são escritos no arquivo descritor do cliente
       send(client_fd, data, strlen(data), 0);
 
-      //Exibe o buffer do cliente no terminal
-      printf("%s\n", bufferClient);
+      // Exibe o buffer do cliente no terminal
+      printf("%s\n%s\n", asctime(local), bufferClient);
+
+      // Redireciona saída para arquivo de log
+      freopen(FILE_LOG, "a+", stdout);
 
       // Limpa a memória das variáveis globais
       memset(&headers, 0, sizeof(headers));

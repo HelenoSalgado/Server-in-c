@@ -5,9 +5,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/socket.h>
 #include <string.h>
-#include <sys/types.h>
+#include <time.h>
 
 #include "config.h"
 #include "http/create-socket.h"

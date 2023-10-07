@@ -8,3 +8,4 @@
 #define DIR_ROOT "/home/heleno/web/"
 #define FILE_INDEX "index.html"
 #define PAGE_NOT_FOUND "/home/heleno/web/pages/notFound.html"
+#define FILE_LOG "server.log"

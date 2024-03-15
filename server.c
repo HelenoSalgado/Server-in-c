@@ -1,4 +1,4 @@
-#include "webserver.h"
+#include "server.h"
 
 int main(){
 
@@ -38,7 +38,7 @@ int main(){
       write(client_fd, data, strlen(data));
 
       //Exibe o buffer do cliente no terminal
-      printf("%s\n", bufferClient);
+      //printf("%s\n", bufferClient);
 
       // Limpa a memória das variáveis globais
       memset(&headers, 0, sizeof(headers));

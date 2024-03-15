@@ -1,10 +1,11 @@
 #include "./../config.h"
-#include "verifyMimeType.h"
+#include "verify.h"
+#include <stdio.h>
 
 int verifyMimeType(char *path){
 
     regex_t preg;
-    char *pattern = "\\.[css | js | svg]*", result[50];
+    char *pattern = "\\.[ css | js | svg | webp ]*", result[50];
     regmatch_t match[1];
     int found;
 
@@ -26,7 +27,6 @@ int verifyMimeType(char *path){
         strncpy(result, ".html", sizeof(result));
     }
 
-    
     if(strcmp(result, ".html") == 0){
         strncpy(mimeType, "text/html", sizeof(mimeType));
 
@@ -41,9 +41,15 @@ int verifyMimeType(char *path){
     else if (strcmp(result, ".svg") == 0){
         strncpy(mimeType, "image/svg+xml", sizeof(mimeType));
 
+    }else if (strcmp(result, ".webp") == 0){
+        strncpy(mimeType, "image/webp", sizeof(mimeType));
+
     }else{
         strncpy(mimeType, "application/octet-stream", sizeof(mimeType));
     }
+
+    // Limpa variável result
+    memset(&result, 0, sizeof(result));
 
     return 1;
 };

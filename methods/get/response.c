@@ -1,4 +1,4 @@
-#include "getResponse.h"
+#include "response.h"
 
 int httpResponse(char *path){
 
@@ -23,7 +23,6 @@ int httpResponse(char *path){
         strncpy(status_msg, "200 OK", sizeof(status_msg));
 
     }
-
 
     if (fd == -1){
 

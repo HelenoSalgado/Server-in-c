@@ -1,8 +1,7 @@
 #include "./../config.h"
-#include "./verifyMimeType.h"
+#include "./../mime-type/verify.h"
+#include "./../methods/get/response.h"
 #include "request.h"
-#include "./get/getResponse.h"
-
 
 int request(char *method, char *path){
 

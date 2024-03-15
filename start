@@ -1,0 +1,5 @@
+#!/bin/bash
+
+gcc -Wall -Wreturn-type -Wextra *.c ./socket/*.c ./http/*.c ./mime-type/*c ./methods/**/*c ./utils/*.c -o ./bin/server &&
+
+sudo ./bin/server

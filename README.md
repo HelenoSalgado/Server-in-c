@@ -1,2 +1,2 @@
-# server-in-c
-Server sample simple in development to learn language c (challeng personal).
+# Server
+Servidor simples desenvolvido em C como desafio de aprendizagem. Suporta HTML, CSS, Javascript e SVG. 

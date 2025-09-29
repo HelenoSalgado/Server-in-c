@@ -19,7 +19,12 @@ int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size)
     // The extension starts right after the dot
     const char *extension = dot + 1;
 
-    if (strcmp(extension, "html") == 0)
+    // Check for .tar.gz specifically
+    if (strlen(path) >= 7 && strcmp(path + strlen(path) - 7, ".tar.gz") == 0)
+    {
+        strncpy(mimeType, "application/gzip", mimeType_size - 1);
+    }
+    else if (strcmp(extension, "html") == 0)
     {
         strncpy(mimeType, "text/html", mimeType_size - 1);
     } else if (strcmp(extension, "css") == 0)

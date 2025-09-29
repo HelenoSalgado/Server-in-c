@@ -2,6 +2,7 @@
 #define CONTEXT_H
 
 #include "config.h"
+#include <arpa/inet.h> // For INET_ADDRSTRLEN and INET6_ADDRSTRLEN
 
 /**
  * @brief Holds all the information related to a single HTTP request.
@@ -12,6 +13,7 @@
 typedef struct
 {
     int client_fd;
+    char client_ip[INET6_ADDRSTRLEN]; // Changed to INET6_ADDRSTRLEN for IPv6 support
     char path[255];
     char method[8];
     char headers[500];

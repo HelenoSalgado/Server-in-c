@@ -1,52 +1,50 @@
-# Servidor Web em C
+# Simple C Web Server
 
-Um servidor web simples e leve desenvolvido em C como um projeto de aprendizado. O foco principal foi criar uma base de código modular, segura e de fácil manutenção.
+A lightweight, multi-threaded HTTP/1.1 server written in C for serving static files.
 
-## Funcionalidades
+## Dependencies
 
-- **Servidor HTTP/1.1 Básico:** Capaz de servir arquivos estáticos.
-- **Suporte a Múltiplos Tipos de Arquivos:** HTML, CSS, JavaScript, SVG, e mais, com detecção de *MIME type*.
-- **Segurança:** Proteção contra ataques de *path traversal*, garantindo que apenas arquivos do diretório web sejam servidos.
-- **Estrutura Modular:** O código é organizado com uma clara separação de responsabilidades (socket, HTTP, manipulação de MIME type, etc.).
-- **Livre de Variáveis Globais:** Utiliza uma estrutura `http_context` para gerenciar o estado de cada requisição, tornando o código mais limpo e preparado para concorrência.
+- `gcc` (GNU Compiler Collection)
+- `make`
+- A POSIX-compliant system with `pthreads` support (e.g., Linux, macOS).
 
-## Melhorias da Refatoração
+## How to Run
 
-Uma refatoração significativa foi realizada para melhorar a qualidade e a segurança do código. Para um detalhamento completo das mudanças, consulte o arquivo [IMPROVEMENTS.md](IMPROVEMENTS.md).
-
-## Como Começar
-
-### Pré-requisitos
-
-- GCC (GNU Compiler Collection)
-- Make
-
-### Compilando e Executando
-
-1.  **Navegue até o diretório refatorado:**
-
-    ```bash
-    cd mime-type
-    ```
-
-2.  **Compile o projeto:**
-
+1.  **Compile the server:**
     ```bash
     make
     ```
 
-3.  **Execute o servidor:**
-
+2.  **Run the server:**
     ```bash
-    ./bin/server
+    ./bin/server [options]
     ```
 
-O servidor estará rodando em `http://localhost:3000`.
+### Command-line Options
 
-### Limpando os Arquivos de Build
+| Option      | Description                                           | Default      |
+|-------------|-------------------------------------------------------|--------------|
+| `-p <port>` | Specify the port to listen on.                        | `3000`       |
+| `-d <dir>`  | Specify the web root directory.                       | `./web`      |
+| `-b`        | Run the server as a daemon (in the background).       | (foreground) |
+| `-h`        | Display the help message.                             |              |
 
-Para remover os arquivos de objeto e o executável, execute:
-
+**Example:**
 ```bash
-make clean
+# Run in the background on port 8080, serving files from /var/www
+./bin/server -b -p 8080 -d /var/www
 ```
+
+## Features
+
+- **Multi-threaded:** Handles multiple connections simultaneously.
+- **Configurable:** Set port and root directory via command line.
+- **Static File Serving:** Serves static files from the specified root directory.
+- **HTTP/1.1 Compliance:**
+    - Supports `GET` and `HEAD` methods.
+    - Returns `501 Not Implemented` for unsupported methods.
+- **Logging:** Logs requests to standard output in the format: `[timestamp] - [client_ip] - "[method] [path]" [status_code]`.
+- **Daemonization:** Can run as a background process.
+
+---
+For more detailed documentation, see the `docs` directory.

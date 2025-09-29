@@ -30,9 +30,5 @@ int createSocket(){
 
     listen(socket_descriptor, 3);
 
-    printf("%s\n", "");
-    printf("%s%s %s\n", "🏁 Server running in port: ", PORT, "🚀");
-    printf("%s\n", "");
-
     return socket_descriptor;
 }

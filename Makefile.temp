@@ -1,0 +1,40 @@
+CC = gcc
+CFLAGS = -Wall -Wextra -g -I.
+TEST_CFLAGS = $(CFLAGS) -DUNITY_INCLUDE_CONFIG_H -I. -I./tests -DTEST_BUILD
+
+TEST_MOCKS_OBJECTS = tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o
+
+all: bin/tests/http/test_http_handler
+
+bin/tests/http/test_http_handler: tests/http/test_http_handler.o utils/regex.o utils/verify.o utils/logger.o tests/unity/unity.o http/http_handler.o tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o
+	@mkdir -p $(dir $@)
+	@echo "  LD (test) $@"
+	@$(CC) $(TEST_CFLAGS) -o $@ tests/http/test_http_handler.o utils/regex.o utils/verify.o utils/logger.o tests/unity/unity.o http/http_handler.o tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o
+
+# Rule to compile mock_syscalls.c
+tests/mocks/mock_syscalls.o: tests/mocks/mock_syscalls.c
+	@mkdir -p $(dir $@)
+	@echo "  CC (mock) $<"
+	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+# Rule to compile mock_http_response.c
+tests/mocks/mock_http_response.o: tests/mocks/mock_http_response.c
+	@mkdir -p $(dir $@)
+	@echo "  CC (mock) $<"
+	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+# Generic rule to compile source files into object files
+%.o: %.c
+	@echo "  CC (test) $<"
+	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+# Explicit rule for tests/http/test_http_handler.o to ensure mock_syscalls.h is included
+tests/http/test_http_handler.o: tests/http/test_http_handler.c tests/mocks/mock_syscalls.h
+	@echo "  CC (test) $<"
+	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+
+clean:
+	@echo "  CLEAN"
+	@rm -f *.o bin/tests/http/test_http_handler tests/mocks/*.o
+	@echo "✓ Clean complete."

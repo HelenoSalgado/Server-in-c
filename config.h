@@ -5,7 +5,7 @@
 // Elas são declaradas aqui como 'extern' e definidas com valores padrão em 'config.c'.
 
 extern const char *PORT;
-extern const char *DIR_ROOT;
+extern char *DIR_ROOT;
 
 #define _GNU_SOURCE
 #define BUFFER_SIZE 2048

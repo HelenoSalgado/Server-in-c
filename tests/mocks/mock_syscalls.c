@@ -4,25 +4,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// Mock for open
+// Mock para open
 static int open_return_value = -1;
 
-// Mock for write
+// Mock para write
 static char *write_buffer = NULL;
 static size_t write_buffer_size = 0;
 static ssize_t write_return_value = -1;
 
-// Mock for read
+// Mock para read
 static const char *mock_read_buffer = NULL;
 static size_t mock_read_count = 0;
 static const char *mock_file_content_buffer = NULL;
 static size_t mock_file_content_count = 0;
 
-// Mock for realpath
+// Mock para realpath
 static const char *mock_realpath_return_value = NULL;
 static int mock_realpath_fail_flag = 0;
 
-// Sequence for realpath
+// Sequência para realpath
 static const char **realpath_sequence = NULL;
 static int realpath_sequence_count = 0;
 static int realpath_sequence_index = 0;
@@ -62,22 +62,22 @@ void clear_mock_write_buffer() {
     }
 }
 
-int mock_open(const char *pathname, int flags, ...) {
-    (void)flags;    // Unused
-    // Handle mode_t for creat/open with O_CREAT
+int __wrap_open(const char *pathname, int flags, ...) {
+    fprintf(stderr, "DEBUG: __wrap_open called for %s, returning %d\n", pathname, open_return_value);
+    (void)flags;    // Não utilizado
+    // Lida com mode_t para creat/open com O_CREAT
     if (flags & O_CREAT) {
         va_list args;
         va_start(args, flags);
         mode_t mode = va_arg(args, mode_t);
-        (void)mode; // Unused
+        (void)mode; // Não utilizado
         va_end(args);
     }
-    printf("MOCK_OPEN: pathname=%s, returning %d\n", pathname, open_return_value);
     return open_return_value;
 }
 
 ssize_t mock_write(int fd, const void *buf, size_t count) {
-    (void)fd; // Unused
+    (void)fd; // Não utilizado
     if (write_buffer) {
         free(write_buffer);
     }
@@ -89,72 +89,66 @@ ssize_t mock_write(int fd, const void *buf, size_t count) {
     } else {
         write_buffer_size = 0;
     }
-    printf("MOCK_WRITE: fd=%d, count=%zu, returning %zd\n", fd, count, (write_return_value != -1) ? write_return_value : (ssize_t)count);
     return (write_return_value != -1) ? write_return_value : (ssize_t)count;
 }
 
-ssize_t mock_read(int fd, void *buf, size_t count) {
-    // Handle client_fd (1) specifically
+ssize_t __wrap_read(int fd, void *buf, size_t count) {
+    fprintf(stderr, "DEBUG: __wrap_read called for fd %d, count %zu\n", fd, count);
+    fprintf(stderr, "DEBUG: mock_read_buffer: %s\n", mock_read_buffer ? mock_read_buffer : "(null)");
+    fprintf(stderr, "DEBUG: mock_file_content_buffer: %s\n", mock_file_content_buffer ? mock_file_content_buffer : "(null)");
+    // Trata o client_fd (1) especificamente
     if (fd == 1) {
         size_t bytes_to_copy = (count < mock_read_count) ? count : mock_read_count;
         if (mock_read_buffer && buf) {
             memcpy(buf, mock_read_buffer, bytes_to_copy);
-            printf("MOCK_READ (client_fd): fd=%d, count=%zu, copied=%zu\n", fd, count, bytes_to_copy);
             return (ssize_t)bytes_to_copy;
         }
     }
-    // Handle file content reads
-    else if (mock_file_content_buffer && buf) { // This assumes file content reads are not on fd 1
+    // Trata leituras de conteúdo de arquivo
+    else if (mock_file_content_buffer && buf) { // Assume que leituras de conteúdo de arquivo não estão no fd 1
         size_t bytes_to_copy = (count < mock_file_content_count) ? count : mock_file_content_count;
         memcpy(buf, mock_file_content_buffer, bytes_to_copy);
-        printf("MOCK_READ (file_content): fd=%d, count=%zu, copied=%zu\n", fd, count, bytes_to_copy);
         return (ssize_t)bytes_to_copy;
     }
-    // For any other fd (including 0 for stdin), return EOF immediately
-    printf("MOCK_READ: fd=%d, returning 0 (EOF)\n", fd);
+    // Para qualquer outro fd (incluindo 0 para stdin), retorna EOF imediatamente
     return 0;
 }
 
 void set_mock_realpath_return(const char *resolved_path_val) {
     mock_realpath_return_value = resolved_path_val;
     mock_realpath_fail_flag = 0;
-    clear_mock_realpath_sequence(); // Clear sequence if single return is set
+    clear_mock_realpath_sequence(); // Limpa a sequência se um retorno único for definido
 }
 
 void set_mock_realpath_fail(void) {
     mock_realpath_fail_flag = 1;
     mock_realpath_return_value = NULL;
-    clear_mock_realpath_sequence(); // Clear sequence if single return is set
+    clear_mock_realpath_sequence(); // Limpa a sequência se um retorno único for definido
 }
 
-char *mock_realpath(const char *path, char *resolved_path) {
-    printf("MOCK_REALPATH: path=%s\n", path);
+char *__wrap_realpath(const char *path, char *resolved_path) {
+    fprintf(stderr, "DEBUG: __wrap_realpath called for path: %s\n", path);
+    char *ret = NULL;
     if (realpath_sequence_count > 0 && realpath_sequence_index < realpath_sequence_count) {
         const char *current_return = realpath_sequence[realpath_sequence_index++];
         if (current_return == NULL) {
-            printf("MOCK_REALPATH: returning NULL from sequence\n");
-            return NULL;
+            ret = NULL;
+        } else {
+            strncpy(resolved_path, current_return, 1023);
+            resolved_path[1023] = '\0';
+            ret = resolved_path;
         }
-        strncpy(resolved_path, current_return, 1023);
-        resolved_path[1023] = '\0';
-        printf("MOCK_REALPATH: returning %s from sequence\n", resolved_path);
-        return resolved_path;
-    }
-
-    if (mock_realpath_fail_flag) {
-        printf("MOCK_REALPATH: returning NULL due to fail flag\n");
-        return NULL;
-    }
-    if (mock_realpath_return_value) {
+    } else if (mock_realpath_fail_flag) {
+        ret = NULL;
+    } else if (mock_realpath_return_value) {
         strncpy(resolved_path, mock_realpath_return_value, 1023);
         resolved_path[1023] = '\0';
-        printf("MOCK_REALPATH: returning %s from single return value\n", resolved_path);
-        return resolved_path;
+        ret = resolved_path;
+    } else {
+        ret = NULL; // Fallback para o realpath real se não for mockado
     }
-    // Fallback to actual realpath if not mocked
-    printf("MOCK_REALPATH: returning NULL (no mock set)\n");
-    return NULL; // Always return NULL if not explicitly mocked
-}
+    fprintf(stderr, "DEBUG: __wrap_realpath returning: %s\n", ret ? ret : "(null)");
+    return ret;}
 
 void set_mock_realpath_sequence(const char **values, int count) {
     clear_mock_realpath_sequence();
@@ -166,8 +160,8 @@ void set_mock_realpath_sequence(const char **values, int count) {
             }
             realpath_sequence_count = count;
             realpath_sequence_index = 0;
-            mock_realpath_fail_flag = 0; // Disable single fail flag
-            mock_realpath_return_value = NULL; // Disable single return value
+            mock_realpath_fail_flag = 0; // Desabilita a flag de falha única
+            mock_realpath_return_value = NULL; // Desabilita o valor de retorno único
         }
     }
 }

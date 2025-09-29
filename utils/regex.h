@@ -4,7 +4,7 @@
 #include <regex.h>
 #include <string.h>
 
-// Takes the client buffer and extracts the path and method into the provided buffers.
+// Extrai o caminho e o método do buffer do cliente para os buffers fornecidos.
 int regexPath(char *bufferClient, char *path, size_t path_size, char *method, size_t method_size);
 
 #endif

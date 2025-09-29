@@ -17,7 +17,7 @@
 #include "http/context.h"
 #include "utils/logger.h"
 
-// Struct to pass connection data to the thread
+// Estrutura para passar dados da conexão para a thread
 typedef struct
 {
   int client_fd;
@@ -28,21 +28,43 @@ void http_handler(http_context *ctx);
 void print_usage(const char *prog_name);
 void daemonize();
 
-// The new connection handler function that will run in a separate thread
+// O novo handler de conexão que rodará em uma thread separada
 void *handle_connection(void *p_conn_info)
 {
   connection_info *conn_info = (connection_info *)p_conn_info;
   int client_fd = conn_info->client_fd;
 
-  // Detach the thread so that its resources are automatically released upon exit
+  // *** INÍCIO DA SEÇÃO DE SEGURANÇA: CONFIGURAÇÃO DE TIMEOUTS ***
+  struct timeval timeout;
+  timeout.tv_sec = 10; // 10 segundos de timeout
+  timeout.tv_usec = 0;
+
+  // Configura o timeout de recebimento (leitura)
+  if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+      perror("setsockopt(SO_RCVTIMEO) failed");
+      close(client_fd);
+      free(conn_info);
+      return NULL;
+  }
+
+  // Configura o timeout de envio (escrita)
+  if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+      perror("setsockopt(SO_SNDTIMEO) failed");
+      close(client_fd);
+      free(conn_info);
+      return NULL;
+  }
+  // *** FIM DA SEÇÃO DE SEGURANÇA ***
+
+  // Desanexa a thread para que seus recursos sejam liberados automaticamente na saída
   pthread_detach(pthread_self());
 
   http_context ctx;
   memset(&ctx, 0, sizeof(ctx));
-  ctx.client_ip[0] = '\0'; // Ensure client_ip is always null-terminated
+  ctx.client_ip[0] = '\0'; // Garante que client_ip seja sempre terminado com nulo
   ctx.client_fd = client_fd;
 
-  // Extract client IP address
+  // Extrai o endereço IP do cliente
   if (conn_info->client_addr.ss_family == AF_INET)
   {
     struct sockaddr_in *s = (struct sockaddr_in *)&conn_info->client_addr;
@@ -54,15 +76,14 @@ void *handle_connection(void *p_conn_info)
     inet_ntop(AF_INET6, &s->sin6_addr, ctx.client_ip, sizeof(ctx.client_ip));
   }
 
-  free(p_conn_info); // Free the allocated memory for the argument
+  free(p_conn_info); // Libera a memória alocada para o argumento
 
   http_handler(&ctx);
-  log_request(&ctx);
 
-  // The resulting concatenated data from the request is written to the client's file descriptor
+  // Os dados concatenados resultantes da requisição são escritos no descritor de arquivo do cliente
   write(client_fd, ctx.data, strlen(ctx.data));
 
-  // The client's file descriptor is closed
+  // O descritor de arquivo do cliente é fechado
   close(client_fd);
 
   return NULL;
@@ -81,27 +102,27 @@ void daemonize()
 {
     pid_t pid;
 
-    // Fork off the parent process
+    // Faz o fork do processo pai
     pid = fork();
 
-    if (pid < 0) exit(EXIT_FAILURE); // Fork error
-    if (pid > 0) exit(EXIT_SUCCESS); // Parent exits
+    if (pid < 0) exit(EXIT_FAILURE); // Erro no fork
+    if (pid > 0) exit(EXIT_SUCCESS); // Processo pai termina
 
-    // Child process becomes session leader
+    // Processo filho se torna líder da sessão
     if (setsid() < 0) exit(EXIT_FAILURE);
 
-    // Second fork to prevent process from acquiring a controlling terminal
+    // Segundo fork para previnir que o processo adquira um terminal de controle
     pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
     if (pid > 0) exit(EXIT_SUCCESS);
 
-    // Change the file mode mask
+    // Altera a máscara de modo de arquivo
     umask(0);
 
-    // Change the current working directory
+    // Altera o diretório de trabalho atual
     chdir("/");
 
-    // Close all open file descriptors
+    // Fecha todos os descritores de arquivo abertos
     for (int x = sysconf(_SC_OPEN_MAX); x >= 0; x--)
     {
         close(x);
@@ -136,14 +157,14 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Resolve DIR_ROOT to an absolute path
+  // Resolve DIR_ROOT para um caminho absoluto
   if (realpath(DIR_ROOT, absolute_dir_root) == NULL) {
-      perror("Error resolving absolute path for DIR_ROOT");
+      perror("Erro ao resolver o caminho absoluto para DIR_ROOT");
       return 1;
   }
-  DIR_ROOT = strdup(absolute_dir_root); // Duplicate the string as DIR_ROOT is const char*
+  DIR_ROOT = strdup(absolute_dir_root); // Duplica a string, pois DIR_ROOT é const char*
   if (DIR_ROOT == NULL) {
-      perror("Error duplicating DIR_ROOT string");
+      perror("Erro ao duplicar a string DIR_ROOT");
       return 1;
   }
 
@@ -154,17 +175,17 @@ int main(int argc, char *argv[])
 
   init_logger(background);
 
-  // Creates a socket and returns its descriptor
+  // Cria um socket e retorna seu descritor
   int socket_descriptor = createSocket();
 
-  printf("\x1b[36m\x1b[3m🚀 Server is ready to accept connections on port %s serving files from %s\n\x1b[0m", PORT, DIR_ROOT);
+  printf("\x1b[36m\x1b[3m🚀 Servidor pronto para aceitar conexões na porta %s servindo arquivos de %s\n\x1b[0m", PORT, DIR_ROOT);
 
   for (;;)
   {
     connection_info *conn_info = malloc(sizeof(connection_info));
     if (!conn_info)
     {
-      perror("Failed to allocate memory for connection info");
+      perror("Falha ao alocar memória para informações de conexão");
       continue;
     }
 
@@ -173,23 +194,23 @@ int main(int argc, char *argv[])
 
     if (conn_info->client_fd < 0)
     {
-      perror("Failed to accept connection");
+      perror("Falha ao aceitar conexão");
       free(conn_info);
       continue;
     }
 
     pthread_t t;
-    // Create a new thread to handle the connection
+    // Cria uma nova thread para lidar com a conexão
     if (pthread_create(&t, NULL, handle_connection, conn_info) != 0)
     {
-      perror("Failed to create thread");
+      perror("Falha ao criar thread");
       close(conn_info->client_fd);
       free(conn_info);
     }
   }
 
-  // This part is unreachable in the current infinite loop, but it's good practice
+  // Esta parte é inalcançável no loop infinito atual, mas é uma boa prática
   close(socket_descriptor);
-  free((char*)DIR_ROOT); // Free the duplicated string
+  free((char*)DIR_ROOT); // Libera a string duplicada
   return 0;
 }

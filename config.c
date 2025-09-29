@@ -4,4 +4,4 @@
 // Estes valores podem ser sobrescritos pela lógica de parsing de argumentos no main.
 
 const char *PORT = "3000";
-const char *DIR_ROOT = "./web";
+char *DIR_ROOT = "./web";

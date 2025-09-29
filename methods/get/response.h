@@ -9,8 +9,8 @@
 
 #include "./../../config.h"
 
-// Handles a GET request for a given path and returns the file descriptor.
-// It populates status_msg and mimeType based on the result.
+// Trata uma requisição GET para um dado caminho e retorna o descritor do arquivo.
+// Preenche status_msg e mimeType com base no resultado.
 int httpResponse(const char *path, char *status_msg, size_t status_msg_size, char *mimeType, size_t mimeType_size);
 
 #endif

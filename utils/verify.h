@@ -1,13 +1,13 @@
 /*
-* Determines the MIME type of a resource based on its path.
+* Determina o tipo MIME de um recurso com base em seu caminho.
 */
 
-#ifndef MIMETYPE_H // Changed from MIMITYPE to MIMETYPE for correctness
+#ifndef MIMETYPE_H // Corrigido de MIMITYPE para MIMETYPE
 #define MIMETYPE_H
 
 #include <string.h>
 
-// Determines the MIME type from the path and writes it to the mimeType buffer.
+// Determina o tipo MIME a partir do caminho e o escreve no buffer mimeType.
 int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size);
 
 #endif

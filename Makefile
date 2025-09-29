@@ -1,30 +1,29 @@
 CC = gcc
+CXX = g++
 CFLAGS = -Wall -Wextra -g -I.
-TEST_CFLAGS = $(CFLAGS) -DUNITY_INCLUDE_CONFIG_H -I. -I./tests -DTEST_BUILD -DverifyMimeType=mock_verifyMimeType
+CXXFLAGS = -Wall -Wextra -g -I.
 LDFLAGS = -pthread
 TARGET = bin/server
 
-# Find all .c files in the project
+# Source files for the main application
 SOURCES = server.c config.c \
           http/http_handler.c \
           methods/get/response.c \
           socket/create.c \
-          utils/logger.c utils/regex.c utils/verify.c
+          utils/logger.c utils/regex.c utils/verify.c utils/path.c
 
-# Replace .c with .o to get the object file names
 OBJECTS = $(SOURCES:.c=.o)
 
-# Test configuration
+# Test specific variables
 TEST_BUILD_DIR = bin/tests
+TEST_CFLAGS = $(CFLAGS) -I. -I./tests -DTEST_BUILD -DverifyMimeType=mock_verifyMimeType
+TEST_CXXFLAGS = $(CXXFLAGS) -I. -I./tests -DTEST_BUILD -DverifyMimeType=mock_verifyMimeType \
+                -I./tests/googletest/googletest/include -I./tests/googletest/googletest/googletest/ -I./tests/googletest/googlemock/include \
+                -I/usr/include/c++/15.2.1
 
-# Find all test source files
-TEST_SOURCES = $(wildcard tests/utils/*.c) \
-               $(wildcard tests/http/*.c) \
-               $(wildcard tests/mocks/*.c)
+GTEST_OBJS = tests/googletest/googletest/googletest/src/gtest-all.o tests/googletest/googletest/googlemock/src/gmock-all.o
 
-# Create a list of test executables from the test source files
-TESTS = $(patsubst tests/%.c,$(TEST_BUILD_DIR)/%,$(filter tests/utils/%.c,$(TEST_SOURCES))) \
-        $(patsubst tests/http/%.c,$(TEST_BUILD_DIR)/http/%,$(filter tests/http/%.c,$(TEST_SOURCES)))
+GTEST_COMPILATION_CXXFLAGS = -isystem./tests/googletest/googletest/include -isystem./tests/googletest/googletest/googletest/
 
 all: $(TARGET)
 
@@ -38,69 +37,126 @@ $(TARGET): $(OBJECTS)
 	@echo "  CC $< "
 	@$(CC) $(CFLAGS) -c $< -o $@
 
+%.o: %.cc
+	@echo "  CXX $< "
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
 clean:
 	@echo "  CLEAN"
-	@rm -f $(OBJECTS) $(TARGET)
-	@rm -rf $(TEST_BUILD_DIR)
+	@rm -f $(OBJECTS)
+	@rm -f tests/mocks/*.o
+	@rm -f $(GTEST_OBJS)
+	@rm -rf $(TEST_BUILD_DIR) $(TARGET) bin/simple_path_test bin/simple_utils_test bin/simple_http_handler_test *.o
 	@echo "✓ Clean complete."
 
 # --- Test Targets ---
 
 # Main test target
-test: $(TESTS)
-	@echo "\n-- Running Tests --"
-	@for test in $(TESTS); do \
-	    ./$$test; \
-	    done
-	@echo "\n✓ Tests complete."
+#test: $(TEST_BUILD_DIR)/http/test_http_handler
+#	@echo "\n-- Running Google Tests --"
+#	@./$(TEST_BUILD_DIR)/http/test_http_handler
 
-# Generic rule to build a test executable
-# This links the test file with the corresponding source file and unity
-TEST_MOCKS_OBJECTS = tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o tests/mocks/mock_verify.o
+simple_test: bin/simple_path_test
+	@echo "\n-- Running Simple Path Test --"
+	@./bin/simple_path_test
 
-$(TEST_BUILD_DIR)/utils/test_mimetype: tests/utils/test_mimetype.o tests/unity/unity.o $(TEST_MOCKS_OBJECTS)
+bin/simple_path_test: tests/simple_path_test.c utils/path.c
 	@mkdir -p $(dir $@)
-	@$(CC) $(TEST_CFLAGS) -o $@ tests/utils/test_mimetype.o tests/unity/unity.o $(TEST_MOCKS_OBJECTS)
+	@echo "  CC $^"
+	@$(CC) $(CFLAGS) $^ -o $@
 
-$(TEST_BUILD_DIR)/utils/test_regex: tests/utils/test_regex.o utils/regex.o tests/unity/unity.o $(TEST_MOCKS_OBJECTS)
+utils_test: bin/simple_utils_test
+	@echo "\n-- Running Simple Utils Test --"
+	@./bin/simple_utils_test
+
+bin/simple_utils_test: tests/simple_utils_test.c utils/regex.c utils/verify.c
 	@mkdir -p $(dir $@)
-	@$(CC) $(TEST_CFLAGS) -o $@ tests/utils/test_regex.o utils/regex.o tests/unity/unity.o $(TEST_MOCKS_OBJECTS)
+	@echo "  CC $^"
+	@$(CC) $(CFLAGS) $^ -o $@
 
+http_handler_test: bin/simple_http_handler_test
+	@echo "\n-- Running Simple HTTP Handler Test --"
+	@./bin/simple_http_handler_test
+
+bin/simple_http_handler_test: tests/simple_http_handler_test.o http_handler.o regex.o verify.o config.o
+	@mkdir -p $(dir $@)
+	@echo "  LD $@"
+	@$(CC) $(CFLAGS) $^ -o $@ -Wl,--wrap=read -Wl,--wrap=close -Wl,--wrap=logger_log -Wl,--wrap=httpResponse -Wl,--wrap=sanitize_path
+
+tests/simple_http_handler_test.o: tests/simple_http_handler_test.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+http_handler.o: http/http_handler.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+regex.o: utils/regex.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+verify.o: utils/verify.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+config.o: config.c
+	@echo "  CC $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+integration_test: $(TARGET)
+	@echo "\n-- Running Integration Tests --"
+	@python3 tests/integration_test.py
+
+test: simple_test utils_test http_handler_test integration_test
+	@echo "\nAll tests completed successfully!"
+
+# Build the test executable
+TEST_OBJS = tests/http/test_http_handler.o $(GTEST_OBJS) \
+            http/http_handler_test.o methods/get/response_test.o \
+            tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o tests/mocks/mock_verify.o \
+            utils/regex.o utils/logger.o utils/path_test.o config.o
+
+$(TEST_BUILD_DIR)/http/test_http_handler: $(TEST_OBJS)
+	@mkdir -p $(dir $@)
+	@echo "  LD $@"
+	@$(CXX) $(TEST_CXXFLAGS) -o $@ $^ $(LDFLAGS) -L/usr/lib -lgtest -lgtest_main -pthread
+
+# --- Test Object Compilation ---
+
+# Compile production code with mocks
 tests/http/test_http_handler.o: tests/http/test_http_handler.c
-	@$(CC) $(TEST_CFLAGS) -Dread=mock_read -Dopen=mock_open -Drealpath=mock_realpath -c $< -o $@
-
-tests/utils/test_mimetype.o: tests/utils/test_mimetype.c
-	@$(CC) $(TEST_CFLAGS) -Dopen=mock_open -Drealpath=mock_realpath -c $< -o $@
-
-tests/utils/test_regex.o: tests/utils/test_regex.c
-	@$(CC) $(TEST_CFLAGS) -Drealpath=mock_realpath -c $< -o $@
+	@echo "  CXX $<"
+	@$(CXX) $(TEST_CXXFLAGS) -c $< -o $@
 
 http/http_handler_test.o: http/http_handler.c
-	@$(CC) $(TEST_CFLAGS) -Dread=mock_read -Dopen=mock_open -Drealpath=mock_realpath -include tests/http/test_http_handler_includes.h -c $< -o $@
+	@echo "  CC (test) $< "
+	@$(CC) $(TEST_CFLAGS) -Dread=__wrap_read -include tests/http/test_http_handler_includes.h -c $< -o $@
 
 methods/get/response_test.o: methods/get/response.c
-	@$(CC) $(TEST_CFLAGS) -Dopen=mock_open -Drealpath=mock_realpath -c $< -o $@
+	@echo "  CC (test) $< "
+	@$(CC) $(TEST_CFLAGS) -Dopen=__wrap_open -c $< -o $@
 
-$(TEST_BUILD_DIR)/http/test_http_handler: tests/http/test_http_handler.o utils/regex.o utils/logger.o tests/unity/unity.o http/http_handler_test.o methods/get/response_test.o config.o $(TEST_MOCKS_OBJECTS)
-	@mkdir -p $(dir $@)
-	@$(CC) $(TEST_CFLAGS) -o $@ tests/http/test_http_handler.o utils/regex.o utils/logger.o tests/unity/unity.o http/http_handler_test.o methods/get/response_test.o config.o $(TEST_MOCKS_OBJECTS)
+utils/path_test.o: utils/path.c
+	@echo "  CC (test) $< "
+	@$(CC) $(TEST_CFLAGS) -c $< -o $@
 
-# Rule to compile mock_syscalls.c
 tests/mocks/mock_syscalls.o: tests/mocks/mock_syscalls.c
-	@mkdir -p $(dir $@)
+	@echo "  CC $< "
 	@$(CC) $(TEST_CFLAGS) -c $< -o $@
 
-# Rule to compile mock_http_response.c
 tests/mocks/mock_http_response.o: tests/mocks/mock_http_response.c
-	@mkdir -p $(dir $@)
+	@echo "  CC $< "	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+
+tests/mocks/mock_verify.o: tests/mocks/mock_verify.c
+	@echo "  CC $< "
 	@$(CC) $(TEST_CFLAGS) -c $< -o $@
 
-# Generic rule to compile test source files into object files
-%.o: %.c
-	@$(CC) $(TEST_CFLAGS) -c $< -o $@
+tests/googletest/googletest/googletest/src/gtest-all.o: tests/googletest/googletest/googletest/src/gtest-all.cc
+	@echo "  CXX (gtest) $< "
+	@$(CXX) $(GTEST_COMPILATION_CXXFLAGS) -c $< -o $@
 
-# Specific rule for http/http_handler.o when building tests
-# This rule is removed to avoid compiling http/http_handler.o with TEST_CFLAGS for the main build.
+tests/googletest/googletest/googlemock/src/gmock-all.o: tests/googletest/googletest/googlemock/src/gmock-all.cc
+	@echo "  CXX (gtest) $< "
+	@$(CXX) $(GTEST_COMPILATION_CXXFLAGS) -c $< -o $@
 
-
-.PHONY: all clean test
+.PHONY: all clean test simple_test utils_test http_handler_test integration_test

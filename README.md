@@ -1,14 +1,14 @@
-# Simple C Web Server
+# Salop Web Server
 
-A lightweight, multi-threaded HTTP/1.1 server written in C for serving static files.
+Servidor escrito em C com suporte a multi-threaded para servir arquivos estáticos.
 
-## Dependencies
+## Dependências
 
 - `gcc` (GNU Compiler Collection)
 - `make`
 - A POSIX-compliant system with `pthreads` support (e.g., Linux, macOS).
 
-## How to Run
+## Como rodar
 
 1.  **Compile the server:**
     ```bash
@@ -20,31 +20,31 @@ A lightweight, multi-threaded HTTP/1.1 server written in C for serving static fi
     ./bin/server [options]
     ```
 
-### Command-line Options
+### Opções de linha de comando
 
 | Option      | Description                                           | Default      |
 |-------------|-------------------------------------------------------|--------------|
-| `-p <port>` | Specify the port to listen on.                        | `3000`       |
-| `-d <dir>`  | Specify the web root directory.                       | `./web`      |
-| `-b`        | Run the server as a daemon (in the background).       | (foreground) |
-| `-h`        | Display the help message.                             |              |
+| `-p <port>` | Especifíque a porta ouvinte.                          | `3000`       |
+| `-d <dir>`  | Especifíque o diretório a ser servido.                | `./web`      |
+| `-b`        | Rode em background - libere o terminal.               | (foreground) |
+| `-h`        | Mostrar mensagem de ajuda.                            |              |
 
 **Example:**
 ```bash
-# Run in the background on port 8080, serving files from /var/www
+# Rodando servidor em background na porta 8080, servindo arquivos de /var/www
 ./bin/server -b -p 8080 -d /var/www
 ```
 
 ## Features
 
-- **Multi-threaded:** Handles multiple connections simultaneously.
-- **Configurable:** Set port and root directory via command line.
-- **Static File Serving:** Serves static files from the specified root directory.
+- **Multi-threaded:** Receba múltiplas conexões simultâneas.
+- **Configuração:** Defina porta e diretório raíz via linha de comando.
+- **Arquivos estáticos:** Sirva arquivos estáticos especificando um diretório.
 - **HTTP/1.1 Compliance:**
-    - Supports `GET` and `HEAD` methods.
-    - Returns `501 Not Implemented` for unsupported methods.
-- **Logging:** Logs requests to standard output in the format: `[timestamp] - [client_ip] - "[method] [path]" [status_code]`.
-- **Daemonization:** Can run as a background process.
+    - Supporta `GET` e `HEAD` métodos.
+    - Returna `501 Not Implemented` para métodos não suportados.
+- **Logging:** Logs de requisições padronizadas no formato: `[timestamp] - [client_ip] - "[method] [path]" [status_code]`.
+- **Daemonization:** Pode rodar processos filhos em background.
 
 ---
-For more detailed documentation, see the `docs` directory.
+Para mais detalhes, veja o diretório `docs`.

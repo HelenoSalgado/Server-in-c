@@ -1,6 +1,6 @@
 /*
-* Header for http_handler.c
-* Receives, processes, and responds to client data.
+* Cabeçalho para http_handler.c
+* Recebe, processa e responde aos dados do cliente.
 */
 
 #ifndef HTTP_HANDLER_H
@@ -12,7 +12,8 @@
 
 #include "context.h"
 
-// The function takes a pointer to the http_context struct
+// A função recebe um ponteiro para a struct http_context
 void http_handler(http_context *ctx);
+void handle_get_request(http_context *ctx);
 
 #endif

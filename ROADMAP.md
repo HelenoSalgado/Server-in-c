@@ -1,10 +1,10 @@
 # Roadmap de Melhorias do Servidor
 
-Este documento descreve os próximos passos e objetivos para a evolução deste servidor web em C.
+Este documento descreve metas para a evolução deste servidor web em C.
 
 ## 1. Implementar Concorrência com Multi-threading
 
-**Objetivo:** Permitir que o servidor atenda múltiplos clientes simultaneamente, eliminando o gargalo do modelo atual que processa uma requisição por vez.
+**Objetivo:** Permitir que o servidor atenda múltiplos clientes simultaneamente, eliminando o gargalo de uma requisição por vez não escalável.
 
 -   [x] Modificar o loop principal em `server.c`.
 -   [x] Para cada nova conexão (`accept`), criar uma nova thread (usando `pthread_create`) para lidar com a requisição.
@@ -57,3 +57,8 @@ Este roadmap foi concluído, servindo como um histórico do desenvolvimento inic
     -   [ ] Testar métodos não suportados (`POST`, etc.) para a resposta `501`.
     -   [ ] Testar os argumentos de linha de comando (`-p`, `-d`).
 -   [ ] **Integração com `make`**: Adicionar um target `make test` para rodar todos os testes automaticamente.
+
+### Erro silêncioso a resolver registrado journalctl:
+ng degraded feature set UDP instead of TCP for DNS server 1.0.0.1.
+ng degraded feature set TCP instead of UDP for DNS server 1.1.1.1.
+

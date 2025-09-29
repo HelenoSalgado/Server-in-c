@@ -3,11 +3,11 @@
 #include <string.h>
 
 void setUp(void) {
-    // set stuff up here
+    // Configurações antes de cada teste
 }
 
 void tearDown(void) {
-    // clean stuff up here
+    // Limpeza após cada teste
 }
 
 void test_verifyMimeType_html(void) {

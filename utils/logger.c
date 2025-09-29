@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include <stdlib.h> // For atoi
+#include <stdlib.h> // Para atoi
 
 FILE *log_file = NULL;
 
@@ -28,11 +28,11 @@ void log_request(http_context *ctx) {
 
     const char *color_start = "\x1b[0m"; // Reset color
     if (status_code >= 200 && status_code < 300) {
-        color_start = "\x1b[32m"; // Green for 2xx
+        color_start = "\x1b[32m"; // Green para 2xx
     } else if (status_code >= 400 && status_code < 500) {
-        color_start = "\x1b[33m"; // Yellow for 4xx
+        color_start = "\x1b[33m"; // Yellow para 4xx
     } else if (status_code >= 500 && status_code < 600) {
-        color_start = "\x1b[31m"; // Red for 5xx
+        color_start = "\x1b[31m"; // Red para 5xx
     }
 
     if (log_file != NULL) {
@@ -43,7 +43,7 @@ void log_request(http_context *ctx) {
                 ctx->path,
                 color_start,
                 ctx->status_msg);
-        fflush(log_file); // Ensure log is written immediately
+        fflush(log_file);
     } else {
         printf("%s - %s - \"%s %s\" %s%s\x1b[0m\n",
                time_str,

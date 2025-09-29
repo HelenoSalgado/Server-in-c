@@ -2,18 +2,17 @@
 #define CONTEXT_H
 
 #include "config.h"
-#include <arpa/inet.h> // For INET_ADDRSTRLEN and INET6_ADDRSTRLEN
+#include <arpa/inet.h> // Para INET_ADDRSTRLEN e INET6_ADDRSTRLEN
 
 /**
- * @brief Holds all the information related to a single HTTP request.
- * This struct is passed between functions to avoid using global variables,
- * making the server more modular and prepared for future concurrency.
+ * @brief Armazena todas as informações relacionadas a uma única requisição HTTP.
+ * Esta struct é passada entre as funções para evitar o uso de variáveis globais,
+ * tornando o servidor mais modular e preparado para concorrência futura.
  */
-
 typedef struct
 {
     int client_fd;
-    char client_ip[INET6_ADDRSTRLEN]; // Changed to INET6_ADDRSTRLEN for IPv6 support
+    char client_ip[INET6_ADDRSTRLEN]; // Suporte para IPv6
     char path[255];
     char method[8];
     char headers[500];

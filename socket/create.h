@@ -1,5 +1,5 @@
 /*
-* Cabeçalho com funções referentes a fonte create-socket.c
+* Cabeçalho com funções referentes ao arquivo create.c
 */
 
 #ifndef CREATE_SOCKET
@@ -12,7 +12,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 
-// Cria o socket de conexções e retorna um socket descriptor (número inteiro);
+// Cria o socket de conexões e retorna um descritor de socket (número inteiro);
 int createSocket(void);
 
 #endif

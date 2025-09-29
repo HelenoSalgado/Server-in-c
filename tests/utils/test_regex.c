@@ -3,11 +3,11 @@
 #include <string.h>
 
 void setUp(void) {
-    // set stuff up here
+    // Configurações antes de cada teste
 }
 
 void tearDown(void) {
-    // clean stuff up here
+    // Limpeza após cada teste
 }
 
 void test_regexPath_simpleGet(void) {
@@ -16,7 +16,7 @@ void test_regexPath_simpleGet(void) {
     char method[16];
     int result = regexPath(bufferClient, path, sizeof(path), method, sizeof(method));
 
-    TEST_ASSERT_EQUAL_INT(0, result); // Assuming 0 indicates success
+    TEST_ASSERT_EQUAL_INT(0, result); // Espera 0, que indica sucesso
     TEST_ASSERT_EQUAL_STRING("/index.html", path);
     TEST_ASSERT_EQUAL_STRING("GET", method);
 }

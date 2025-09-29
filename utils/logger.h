@@ -2,7 +2,7 @@
 #define LOGGER_H
 
 #include "../http/context.h"
-#include <stdio.h> // For FILE
+#include <stdio.h> // Para FILE
 
 extern FILE *log_file;
 

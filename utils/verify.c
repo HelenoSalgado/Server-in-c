@@ -5,10 +5,10 @@
 
 int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size)
 {
-    // Find the last dot in the path to get the extension
+    // Encontra o último ponto no caminho para obter a extensão
     const char *dot = strrchr(path, '.');
 
-    // If there's no dot, or it's the first character, we can't determine the type.
+    // Se não houver ponto, ou se for o primeiro caractere, não pode determinar o tipo.
     if (!dot || dot == path)
     {
         strncpy(mimeType, "application/octet-stream", mimeType_size - 1);
@@ -16,10 +16,10 @@ int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size)
         return 1;
     }
 
-    // The extension starts right after the dot
+    // A extensão começa logo após o ponto
     const char *extension = dot + 1;
 
-    // Check for .tar.gz specifically
+    // Verifica especificamente por .tar.gz
     if (strlen(path) >= 7 && strcmp(path + strlen(path) - 7, ".tar.gz") == 0)
     {
         strncpy(mimeType, "application/gzip", mimeType_size - 1);
@@ -32,15 +32,18 @@ int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size)
         strncpy(mimeType, "text/css", mimeType_size - 1);
     } else if (strcmp(extension, "js") == 0)
     {
-        strncpy(mimeType, "text/javascript", mimeType_size - 1);
+        strncpy(mimeType, "application/javascript", mimeType_size - 1);
     } else if (strcmp(extension, "svg") == 0)
     {
         strncpy(mimeType, "image/svg+xml", mimeType_size - 1);
     } else if (strcmp(extension, "webp") == 0)
     {
         strncpy(mimeType, "image/webp", mimeType_size - 1);
+    } else if (strcmp(extension, "json") == 0)
+    {
+        strncpy(mimeType, "application/json", mimeType_size - 1);
     } else {
-        // Default for unknown extensions
+        // Padrão para extensões desconhecidas
         strncpy(mimeType, "application/octet-stream", mimeType_size - 1);
     }
     mimeType[mimeType_size - 1] = '\0';

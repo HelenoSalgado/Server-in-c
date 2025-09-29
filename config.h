@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#define PORT "80"
+#define PORT "3000"
 #define BUFFER_SIZE 2048
 #define BUFFER_OUTPUT_SIZE 3000
 #define MIMETYPE_SIZE 30

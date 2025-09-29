@@ -1,37 +1,40 @@
 #include "response.h"
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "../../config.h"
 
-int httpResponse(char *path){
-
+int httpResponse(const char *path, char *status_msg, size_t status_msg_size, char *mimeType, size_t mimeType_size)
+{
     char fileName[255];
     int fd;
 
-    // Concatena o diretório raíz + path + recurso solicitado
-    sprintf(fileName, "%s%s%s", DIR_ROOT, path, FILE_INDEX);
-
-    if ( strcmp(mimeType, "text/html") == 0){
-
-        fd = open(fileName, O_RDONLY);
-        
-        strncpy(status_msg, "200 OK", sizeof(status_msg));
-                
-    }else{
-
-        sprintf(fileName, "%s%s", DIR_ROOT, path);
-
-        fd = open(fileName, O_RDONLY);
-        
-        strncpy(status_msg, "200 OK", sizeof(status_msg));
-
+    if (path[strlen(path) - 1] == '/')
+    {
+        snprintf(fileName, sizeof(fileName), "%s%s%s", DIR_ROOT, path, FILE_INDEX);
+    } else {
+        snprintf(fileName, sizeof(fileName), "%s%s", DIR_ROOT, path);
     }
 
-    if (fd == -1){
+    fd = open(fileName, O_RDONLY);
 
-        printf("Valor do erro: %d\n", errno);
-        perror("Erro");
-
+    if (fd != -1)
+    {
+        strncpy(status_msg, "200 OK", status_msg_size - 1);
+        status_msg[status_msg_size - 1] = '\0';
+    } else {
+        perror("Failed to open requested file");
         fd = open(PAGE_NOT_FOUND, O_RDONLY);
-        strncpy(status_msg, "404 Not Found", sizeof(status_msg));
-                
+        strncpy(status_msg, "404 Not Found", status_msg_size - 1);
+        status_msg[status_msg_size - 1] = '\0';
+
+        if (fd != -1)
+        {
+            strncpy(mimeType, "text/html", mimeType_size - 1);
+            mimeType[mimeType_size - 1] = '\0';
+        }
     }
 
     return fd;

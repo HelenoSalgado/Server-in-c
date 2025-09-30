@@ -10,17 +10,17 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
 
 ## Como rodar
 
-1.  **Compile the server:**
+1.  **Compile o servidor:**
     ```bash
     make
     ```
 
-2.  **Run the server:**
+2.  **Rode o servidor:**
     ```bash
     ./bin/server [options]
     ```
 
-3.  **Stop the server:**
+3.  **Pare o servidor:**
     ```bash
     # Em modo foreground: pressione Ctrl+C
     # Em modo daemon: use o PID exibido na inicialização ou arquivo server.pid
@@ -38,7 +38,7 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
 | `-b`        | Rode em background - libere o terminal.               | (foreground) |
 | `-h`        | Mostrar mensagem de ajuda.                            |              |
 
-**Example:**
+**Examplo:**
 ```bash
 # Rodando servidor em background na porta 8080, servindo arquivos de /var/www
 ./bin/server -b -p 8080 -d /var/www

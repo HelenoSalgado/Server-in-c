@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <server>
+        <port>8080</port>
+        <root>/web</root>
+    </server>
+</config>

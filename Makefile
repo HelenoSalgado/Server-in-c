@@ -56,7 +56,7 @@ clean:
 #	@./$(TEST_BUILD_DIR)/http/test_http_handler
 
 simple_test: bin/simple_path_test
-	@echo "\n-- Running Simple Path Test --"
+	@echo "\n-- Executando Teste de Caminho --"
 	@./bin/simple_path_test
 
 bin/simple_path_test: tests/simple_path_test.c utils/path.c
@@ -65,7 +65,7 @@ bin/simple_path_test: tests/simple_path_test.c utils/path.c
 	@$(CC) $(CFLAGS) $^ -o $@
 
 utils_test: bin/simple_utils_test
-	@echo "\n-- Running Simple Utils Test --"
+	@echo "\n-- Executando Teste de Utilitários --"
 	@./bin/simple_utils_test
 
 bin/simple_utils_test: tests/simple_utils_test.c utils/regex.c utils/verify.c
@@ -74,13 +74,13 @@ bin/simple_utils_test: tests/simple_utils_test.c utils/regex.c utils/verify.c
 	@$(CC) $(CFLAGS) $^ -o $@
 
 http_handler_test: bin/simple_http_handler_test
-	@echo "\n-- Running Simple HTTP Handler Test --"
+	@echo "\n-- Executando Teste do Manipulador HTTP --"
 	@./bin/simple_http_handler_test
 
 bin/simple_http_handler_test: tests/simple_http_handler_test.o http_handler.o regex.o verify.o config.o
 	@mkdir -p $(dir $@)
 	@echo "  LD $@"
-	@$(CC) $(CFLAGS) $^ -o $@ -Wl,--wrap=read -Wl,--wrap=close -Wl,--wrap=logger_log -Wl,--wrap=httpResponse -Wl,--wrap=sanitize_path
+	@$(CC) $(CFLAGS) $^ -o $@ -Wl,--wrap=read -Wl,--wrap=close -Wl,--wrap=logger_log -Wl,--wrap=httpResponse -Wl,--wrap=sanitize_path -Wl,--wrap=log_request -Wl,--wrap=open
 
 tests/simple_http_handler_test.o: tests/simple_http_handler_test.c
 	@echo "  CC $<"
@@ -103,11 +103,11 @@ config.o: config.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 integration_test: $(TARGET)
-	@echo "\n-- Running Integration Tests --"
+	@echo "\n-- Executando Testes de Integração --"
 	@python3 tests/integration_test.py
 
 test: simple_test utils_test http_handler_test integration_test
-	@echo "\nAll tests completed successfully!"
+	@echo "\nTodos os testes concluídos com sucesso!"
 
 # Build the test executable
 TEST_OBJS = tests/http/test_http_handler.o $(GTEST_OBJS) \

@@ -36,6 +36,9 @@ int verifyMimeType(const char *path, char *mimeType, size_t mimeType_size)
     } else if (strcmp(extension, "svg") == 0)
     {
         strncpy(mimeType, "image/svg+xml", mimeType_size - 1);
+    } else if (strcmp(extension, "xml") == 0)
+    {
+        strncpy(mimeType, "application/xml", mimeType_size - 1);
     } else if (strcmp(extension, "webp") == 0)
     {
         strncpy(mimeType, "image/webp", mimeType_size - 1);

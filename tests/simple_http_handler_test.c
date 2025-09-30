@@ -5,11 +5,19 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h> // For exit()
+#include <fcntl.h>  // For open() constants
 
 #include "../http/http_handler.h"
 #include "../http/context.h"
 #include "../config.h"
 #include "../utils/logger.h" // Added for LogLevel
+
+// Códigos de cor ANSI
+#define VERDE "\033[32m"
+#define VERMELHO "\033[31m"
+#define AMARELO "\033[33m"
+#define AZUL "\033[34m"
+#define RESET "\033[0m"
 
 // Forward declaration for the mock file content read function
 ssize_t __wrap_read_file_content(int fd, void *buf, size_t count);
@@ -59,18 +67,33 @@ void set_mock_request(const char *request) {
 
 #define ASSERT_EQ(expected, actual, message) do { \
     if ((expected) != (actual)) { \
-        printf("FAIL: %s - Expected %d, got %d\n", message, (int)(expected), (int)(actual)); \
+        printf(VERMELHO "FALHOU: %s - Esperado %d, obtido %d\n" RESET, message, (int)(expected), (int)(actual)); \
         exit(1); \
     } \
-    printf("PASS: %s\n", message); \
 } while(0)
 
 #define ASSERT_STR_EQ(expected, actual, message) do { \
     if (strcmp((expected), (actual)) != 0) { \
-        printf("FAIL: %s - Expected \"%s\", got \"%s\"\n", message, (expected), (actual)); \
+        printf(VERMELHO "FALHOU: %s - Esperado \"%s\", obtido \"%s\"\n" RESET, message, (expected), (actual)); \
         exit(1); \
     } \
-    printf("PASS: %s\n", message); \
+} while(0)
+
+#define ASSERT_HTTP_REQUEST(ctx, exp_method, exp_path, exp_status, test_name) do { \
+    ASSERT_STR_EQ(exp_method, ctx.method, test_name ": Método"); \
+    ASSERT_STR_EQ(exp_path, ctx.path, test_name ": Caminho"); \
+    ASSERT_STR_EQ(exp_status, ctx.status_msg, test_name ": Status"); \
+    printf(VERDE "✓ PASSOU: %s\n" RESET, test_name); \
+} while(0)
+
+#define ASSERT_RESPONSE_CONTENT(ctx, exp_status_header, exp_content_type, exp_body_present, test_name) do { \
+    ASSERT_EQ(strstr(ctx.data, exp_status_header) != NULL, 1, test_name ": Cabeçalho de status"); \
+    if (exp_content_type && strlen(exp_content_type) > 0) { \
+        ASSERT_EQ(strstr(ctx.data, exp_content_type) != NULL, 1, test_name ": Content-Type"); \
+    } \
+    if (exp_body_present && strlen(exp_body_present) > 0) { \
+        ASSERT_EQ(strstr(ctx.data, exp_body_present) != NULL, 1, test_name ": Conteúdo do corpo"); \
+    } \
 } while(0)
 
 // Mock for httpResponse to avoid file system interaction
@@ -168,91 +191,90 @@ void logger_log(int level, const char *format, ...) {
     // Do nothing or print to a mock buffer if needed for testing logger itself
 }
 
+// Mock for log_request
+void __wrap_log_request(http_context *ctx) {
+    // Do nothing for testing
+}
+
+// Mock for open
+int __wrap_open(const char *pathname, int flags) {
+    // Simulate success for existing files, failure for non-existent
+    if (strcmp(pathname, "/web/index.html") == 0) {
+        return 100; // Dummy FD
+    } else if (strcmp(pathname, "/web/404.html") == 0) {
+        return 101; // Dummy FD
+    } else if (strcmp(pathname, "/web/assets/css/main.css") == 0) {
+        return 102; // Dummy FD
+    } else if (strcmp(pathname, "/web/assets/js/index.js") == 0) {
+        return 103; // Dummy FD
+    }
+    return -1; // Simulate file not found
+}
+
 int main() {
     http_context ctx;
-    // int result; // Removed as it's unused and causes warning
 
-    printf("\n-- Running Simple HTTP Handler Tests --\n");
+    printf(AZUL "\n-- Executando Testes do Manipulador HTTP --\n" RESET);
 
     // Test 1: Valid GET request for index.html
     memset(&ctx, 0, sizeof(http_context));
-    ctx.client_fd = 999; // Special FD for mock read
+    ctx.client_fd = 999;
     set_mock_request("GET /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("GET", ctx.method, "Test 1: Extracted method");
-    ASSERT_STR_EQ("/index.html", ctx.path, "Test 1: Extracted path");
-    ASSERT_STR_EQ("200 OK", ctx.status_msg, "Test 1: Status message");
-    // Check if data contains headers and body
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 200 OK") != NULL, 1, "Test 1: Data contains 200 OK header");
-    ASSERT_EQ(strstr(ctx.data, "Content-Type: text/html") != NULL, 1, "Test 1: Data contains Content-Type header");
-    ASSERT_EQ(strstr(ctx.data, "<html><body><h1>Index</h1></body></html>") != NULL, 1, "Test 1: Data contains body");
+    ASSERT_HTTP_REQUEST(ctx, "GET", "/index.html", "200 OK", "GET index.html");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 200 OK", "Content-Type: text/html", "<html><body><h1>Index</h1></body></html>", "Resposta GET index.html");
 
     // Test 2: Valid HEAD request for main.css
     memset(&ctx, 0, sizeof(http_context));
     ctx.client_fd = 999;
     set_mock_request("HEAD /assets/css/main.css HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("HEAD", ctx.method, "Test 2: Extracted method");
-    ASSERT_STR_EQ("/assets/css/main.css", ctx.path, "Test 2: Extracted path");
-    ASSERT_STR_EQ("200 OK", ctx.status_msg, "Test 2: Status message");
-    // For HEAD, only headers should be present, no body
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 200 OK") != NULL, 1, "Test 2: Data contains 200 OK header");
-    ASSERT_EQ(strstr(ctx.data, "Content-Type: text/css") != NULL, 1, "Test 2: Data contains Content-Type header");
-    ASSERT_EQ(strstr(ctx.data, "body { background-color: #f0f0f0; }\n") == NULL, 1, "Test 2: Data does not contain body");
+    ASSERT_HTTP_REQUEST(ctx, "HEAD", "/assets/css/main.css", "200 OK", "HEAD arquivo CSS");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 200 OK", "Content-Type: text/css", "", "Resposta HEAD arquivo CSS");
+    // For HEAD, body should not be present
+    ASSERT_EQ(strstr(ctx.data, "body { background-color: #f0f0f0; }\n") == NULL, 1, "Requisição HEAD: Sem conteúdo do corpo");
 
-    // Test 3: Invalid request format (regexPath fails)
+    // Test 3: Invalid request format
     memset(&ctx, 0, sizeof(http_context));
     ctx.client_fd = 999;
     set_mock_request("GARBAGE_REQUEST\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("", ctx.method, "Test 3: Empty method"); // regexPath should fail to extract
-    ASSERT_STR_EQ("400 Bad Request", ctx.status_msg, "Test 3: Status message");
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 400 Bad Request") != NULL, 1, "Test 3: Data contains 400 Bad Request header");
+    ASSERT_HTTP_REQUEST(ctx, "", "", "400 Bad Request", "Formato de requisição inválido");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 400 Bad Request", "", "", "Resposta requisição inválida");
 
-    // Test 4: Unsupported method (e.g., POST)
+    // Test 4: Unsupported method (POST)
     memset(&ctx, 0, sizeof(http_context));
     ctx.client_fd = 999;
     set_mock_request("POST /submit HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("POST", ctx.method, "Test 4: Extracted method");
-    ASSERT_STR_EQ("/submit", ctx.path, "Test 4: Extracted path");
-    ASSERT_STR_EQ("501 Not Implemented", ctx.status_msg, "Test 4: Status message");
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 501 Not Implemented") != NULL, 1, "Test 4: Data contains 501 Not Implemented header");
+    ASSERT_HTTP_REQUEST(ctx, "POST", "/submit", "501 Not Implemented", "Método POST");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 501 Not Implemented", "", "", "Resposta método POST");
 
-    // Test 5: Path traversal attempt (sanitize_path fails)
+    // Test 5: Path traversal attempt
     memset(&ctx, 0, sizeof(http_context));
     ctx.client_fd = 999;
     set_mock_request("GET /path_traversal HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("GET", ctx.method, "Test 5: Extracted method");
-    ASSERT_STR_EQ("/path_traversal", ctx.path, "Test 5: Extracted path");
-    ASSERT_STR_EQ("404 Not Found", ctx.status_msg, "Test 5: Status message"); // sanitize_path failure leads to 404
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 404 Not Found") != NULL, 1, "Test 5: Data contains 404 Not Found header");
+    ASSERT_HTTP_REQUEST(ctx, "GET", "/path_traversal", "404 Not Found", "Tentativa de travessia de caminho");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 404 Not Found", "", "", "Resposta travessia de caminho");
 
-    // Test 6: Non-existent file (httpResponse returns -1)
+    // Test 6: Non-existent file
     memset(&ctx, 0, sizeof(http_context));
     ctx.client_fd = 999;
     set_mock_request("GET /non_existent HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("GET", ctx.method, "Test 6: Extracted method");
-    ASSERT_STR_EQ("/non_existent", ctx.path, "Test 6: Extracted path");
-    ASSERT_STR_EQ("404 Not Found", ctx.status_msg, "Test 6: Status message");
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 404 Not Found") != NULL, 1, "Test 6: Data contains 404 Not Found header");
+    ASSERT_HTTP_REQUEST(ctx, "GET", "/non_existent", "404 Not Found", "Arquivo inexistente");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 404 Not Found", "", "", "Resposta arquivo inexistente");
 
-    // Test 7: Valid GET request for index.js
+    // Test 7: Valid GET request for JavaScript file
     memset(&ctx, 0, sizeof(http_context));
-    ctx.client_fd = 999; // Special FD for mock read
+    ctx.client_fd = 999;
     set_mock_request("GET /assets/js/index.js HTTP/1.1\r\nHost: localhost\r\n\r\n");
     http_handler(&ctx);
-    ASSERT_STR_EQ("GET", ctx.method, "Test 7: Extracted method");
-    ASSERT_STR_EQ("/assets/js/index.js", ctx.path, "Test 7: Extracted path");
-    ASSERT_STR_EQ("200 OK", ctx.status_msg, "Test 7: Status message");
-    // Check if data contains headers and body
-    ASSERT_EQ(strstr(ctx.data, "HTTP/1.1 200 OK") != NULL, 1, "Test 7: Data contains 200 OK header");
-    ASSERT_EQ(strstr(ctx.data, "Content-Type: application/javascript") != NULL, 1, "Test 7: Data contains Content-Type header");
-    ASSERT_EQ(strstr(ctx.data, "console.log('Hello');") != NULL, 1, "Test 7: Data contains body");
+    ASSERT_HTTP_REQUEST(ctx, "GET", "/assets/js/index.js", "200 OK", "GET arquivo JavaScript");
+    ASSERT_RESPONSE_CONTENT(ctx, "HTTP/1.1 200 OK", "Content-Type: application/javascript", "console.log('Hello');", "Resposta GET JavaScript");
 
-    printf("\nAll Simple HTTP Handler Tests completed.\n");
+    printf(AMARELO "Todos os testes do Manipulador HTTP concluídos.\n" RESET);
 
     return 0;
 }

@@ -48,19 +48,34 @@ Este roadmap foi concluído, servindo como um histórico do desenvolvimento inic
 -   [x] **Escolher um Framework de Teste:** Pesquisar e selecionar um framework de teste de unidade para C (ex: Check, CUnit ou Unity).
 -   [x] **Testes de Unidade:**
     -   [x] Testar as funções de `utils` (MIME type, regex).
-    -   [ ] Testar a lógica de parsing do `http_handler`.
--   [ ] **Testes de Integração/Funcionais:**
-    -   [ ] Criar um script (em Bash, Python, etc.) que inicie o servidor.
-    -   [ ] Usar `curl` ou outra ferramenta para fazer requisições HTTP e validar as respostas.
-    -   [ ] Testar o método `GET` para arquivos existentes e inexistentes (404).
-    -   [ ] Testar o método `HEAD`.
-    -   [ ] Testar métodos não suportados (`POST`, etc.) para a resposta `501`.
-    -   [ ] Testar os argumentos de linha de comando (`-p`, `-d`).
--   [ ] **Integração com `make`**: Adicionar um target `make test` para rodar todos os testes automaticamente.
+    -   [x] Testar a lógica de parsing do `http_handler`.
+-   [x] **Testes de Integração/Funcionais:**
+    -   [x] Criar um script (em Bash, Python, etc.) que inicie o servidor.
+    -   [x] Usar `curl` ou outra ferramenta para fazer requisições HTTP e validar as respostas.
+    -   [x] Testar o método `GET` para arquivos existentes e inexistentes (404).
+    -   [x] Testar o método `HEAD`.
+    -   [x] Testar métodos não suportados (`POST`, etc.) para a resposta `501`.
+    -   [x] Testar os argumentos de linha de comando (`-p`, `-d`).
+-   [x] **Integração com `make`**: Adicionar um target `make test` para rodar todos os testes automaticamente.
 
-### Erro silêncioso a resolver registrado journalctl:
-ng degraded feature set UDP instead of TCP for DNS server 1.0.0.1.
-ng degraded feature set TCP instead of UDP for DNS server 1.1.1.1.
+## Futuras Implementações de Tipos de Arquivo
+
+**Objetivo:** Expandir o suporte a tipos de arquivo para melhor servir conteúdo web.
+
+-   [ ] **Suporte a Imagens:**
+    -   [ ] PNG (image/png)
+    -   [ ] JPEG/JPG (image/jpeg)
+        [ ] WebP (image/webp) - parcialmente implementado - É preciso rever eficiência e ajustar buffer.
+    -   [ ] GIF (image/gif)
+    -   [ ] ICO (image/x-icon)
+-   [ ] **Suporte a Dados:**
+    -   [ ] JSON (application/json) - parcialmente implementado
+    -   [ ] XML (application/xml)
+-   [x] **Suporte a Gráficos Vetoriais:**
+    -   [x] SVG (image/svg+xml)
+-   [ ] **Suporte a Fontes:**
+    -   [ ] WOFF/WOFF2 (font/woff, font/woff2)
+    -   [ ] TTF (font/ttf)
 
 
 ## Resumo das Melhorias Implementadas
@@ -98,6 +113,12 @@ ng degraded feature set TCP instead of UDP for DNS server 1.1.1.1.
      * Gerenciamento PID: Explicado o uso do arquivo server.pid
      * Features atualizadas: Listadas todas as novas funcionalidades
 
+   ### ✅ Testes Automatizados Implementados
+
+     * Testes de unidade: Cobertura completa para utils (path, regex, verify)
+     * Testes de HTTP handler: Cobertura de todos os cenários principais
+     * Testes de integração: Validação end-to-end do servidor
+     * Saída otimizada: Logs concisos e coloridos para melhor legibilidade
+
    Resultado: O código agora é mais limpo, eficiente, sem redundâncias, com logging
-   robusto e gerenciamento seguro de processos. Todas as funcionalidades foram
-   testadas e estão funcionando perfeitamente! 🚀
+   robusto, gerenciamento seguro de processos e uma suíte de testes completa! 🚀

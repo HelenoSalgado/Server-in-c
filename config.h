@@ -8,8 +8,8 @@ extern const char *PORT;
 extern char *DIR_ROOT;
 
 #define _GNU_SOURCE
-#define BUFFER_SIZE 2048
-#define BUFFER_OUTPUT_SIZE 3000
+#define BUFFER_SIZE 131072   // 128KB para suportar imagens médias (WebP, PNG, JPEG pequenos)
+#define BUFFER_OUTPUT_SIZE 135000  // Buffer de saída ligeiramente maior que o de entrada
 #define MIMETYPE_SIZE 30
 #define STATUS_SIZE 30
 #define FILE_INDEX "/index.html"

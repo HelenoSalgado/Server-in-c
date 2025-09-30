@@ -4,6 +4,7 @@
 int createSocket(){
 
     int socket_descriptor;
+    int yes = 1;
 
     struct addrinfo hints, *server;
 
@@ -23,6 +24,12 @@ int createSocket(){
     if (socket_descriptor == -1)
     {
         perror("socket");
+        exit(1);
+    }
+
+    // Permite reutilizar a porta imediatamente após o servidor ser fechado
+    if (setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1) {
+        perror("setsockopt");
         exit(1);
     }
 

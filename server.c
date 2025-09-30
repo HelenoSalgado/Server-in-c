@@ -5,10 +5,10 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h> // For umask
-#include <arpa/inet.h> // Required for inet_ntop
+#include <sys/stat.h> // Para umask
+#include <arpa/inet.h> // Required Para inet_ntop
 #include <pthread.h>
-#include <limits.h> // For PATH_MAX
+#include <limits.h> // Para PATH_MAX
 #include <signal.h> // Para manipulação de sinais
 
 #include "config.h"
@@ -118,7 +118,7 @@ void daemonize()
     if (pid > 0) {
         // Processo pai aguarda um pouco para o filho criar o arquivo PID
         sleep(1);
-        
+
         // Lê o PID do arquivo criado pelo daemon
         FILE *pid_file = fopen("server.pid", "r");
         if (pid_file != NULL) {
@@ -156,15 +156,15 @@ void signal_handler(int signal)
     if (signal == SIGINT || signal == SIGTERM) {
         server_running = 0;
         printf("\n\x1b[31mStopped\x1b[0m\n");
-        
+
         // Remove arquivo PID se existir
         unlink("server.pid");
-        
+
         // Fecha o socket do servidor para interromper o accept()
         if (server_socket_fd != -1) {
             close(server_socket_fd);
         }
-        
+
         exit(0); // Força o encerramento
     }
 }
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
   if (background)
   {
       daemonize();
-      
+
       // Cria arquivo PID (o PID já foi exibido pelo processo pai)
       FILE *pid_file = fopen("server.pid", "w");
       if (pid_file != NULL) {

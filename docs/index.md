@@ -1,4 +1,4 @@
-# Salop Server Documentation
+# Salop Server Documentação
 
 Seja bem vindo a documentação detalhada do Salop Web Server.
 

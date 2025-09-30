@@ -51,7 +51,7 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
 - **Arquivos estáticos:** Sirva arquivos estáticos especificando um diretório.
 - **HTTP/1.1 Compliance:**
     - Supporta `GET` e `HEAD` métodos.
-    - Returna `501 Not Implemented` para métodos não suportados.
+    - Retorna `501 Not Implemented` para métodos não suportados.
 - **Logging:** Logs de requisições padronizadas no formato: `[timestamp] - [client_ip] - "[method] [path]" [status_code]`.
 - **Daemonization:** Pode rodar processos filhos em background.
 - **Desligamento seguro:** Manipula sinais SIGINT e SIGTERM para encerramento limpo.

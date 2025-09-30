@@ -40,12 +40,6 @@ int regexPath(char *bufferClient, char *path, size_t path_size, char *method, si
             return -1; // Indica falha
         }
 
-        // Usa index.html como padrão se a raiz for solicitada
-        if (strcmp(path, "/") == 0) {
-            strncpy(path, "/index.html", path_size - 1);
-            path[path_size - 1] = '\0';
-        }
-
     } else {
         // Não correspondeu ao padrão de requisição GET
         regfree(&preg);

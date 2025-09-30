@@ -6,9 +6,9 @@
 
 FILE *log_file = NULL;
 
-void init_logger(int is_daemon) {
+void init_logger(int is_daemon, const char *log_path) {
     if (is_daemon) {
-        log_file = fopen("server.log", "a");
+        log_file = fopen(log_path, "a");
         if (log_file == NULL) {
             perror("Failed to open log file");
         }
@@ -35,6 +35,16 @@ void log_request(http_context *ctx) {
         color_start = "\x1b[31m"; // Red para 5xx
     }
 
+    // Sempre exibe no terminal
+    printf("%s - %s - \"%s %s\" %s%s\x1b[0m\n",
+           time_str,
+           ctx->client_ip,
+           ctx->method,
+           ctx->path,
+           color_start,
+           ctx->status_msg);
+    
+    // Também salva no arquivo se estiver em modo daemon
     if (log_file != NULL) {
         fprintf(log_file, "%s - %s - \"%s %s\" %s%s\x1b[0m\n",
                 time_str,
@@ -44,13 +54,5 @@ void log_request(http_context *ctx) {
                 color_start,
                 ctx->status_msg);
         fflush(log_file);
-    } else {
-        printf("%s - %s - \"%s %s\" %s%s\x1b[0m\n",
-               time_str,
-               ctx->client_ip,
-               ctx->method,
-               ctx->path,
-               color_start,
-               ctx->status_msg);
     }
 }

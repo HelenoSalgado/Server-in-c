@@ -8,7 +8,6 @@ TARGET = bin/server
 # Source files for the main application
 SOURCES = server.c config.c \
           http/http_handler.c \
-          methods/get/response.c \
           socket/create.c \
           utils/logger.c utils/regex.c utils/verify.c utils/path.c
 
@@ -112,7 +111,7 @@ test: simple_test utils_test http_handler_test integration_test
 
 # Build the test executable
 TEST_OBJS = tests/http/test_http_handler.o $(GTEST_OBJS) \
-            http/http_handler_test.o methods/get/response_test.o \
+            http/http_handler_test.o \
             tests/mocks/mock_syscalls.o tests/mocks/mock_http_response.o tests/mocks/mock_verify.o \
             utils/regex.o utils/logger.o utils/path_test.o config.o
 
@@ -131,10 +130,6 @@ tests/http/test_http_handler.o: tests/http/test_http_handler.c
 http/http_handler_test.o: http/http_handler.c
 	@echo "  CC (test) $< "
 	@$(CC) $(TEST_CFLAGS) -Dread=__wrap_read -include tests/http/test_http_handler_includes.h -c $< -o $@
-
-methods/get/response_test.o: methods/get/response.c
-	@echo "  CC (test) $< "
-	@$(CC) $(TEST_CFLAGS) -Dopen=__wrap_open -c $< -o $@
 
 utils/path_test.o: utils/path.c
 	@echo "  CC (test) $< "

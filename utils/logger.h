@@ -6,7 +6,7 @@
 
 extern FILE *log_file;
 
-void init_logger(int is_daemon);
+void init_logger(int is_daemon, const char *log_path);
 
 void log_request(http_context *ctx);
 

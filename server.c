@@ -9,6 +9,7 @@
 #include <arpa/inet.h> // Required for inet_ntop
 #include <pthread.h>
 #include <limits.h> // For PATH_MAX
+#include <signal.h> // Para manipulação de sinais
 
 #include "config.h"
 #include "socket/create.h"
@@ -27,6 +28,11 @@ typedef struct
 void http_handler(http_context *ctx);
 void print_usage(const char *prog_name);
 void daemonize();
+void signal_handler(int signal);
+
+// Variável global para controlar o loop do servidor
+volatile sig_atomic_t server_running = 1;
+int server_socket_fd = -1; // Socket principal para fechar no signal handler
 
 // O novo handler de conexão que rodará em uma thread separada
 void *handle_connection(void *p_conn_info)
@@ -96,6 +102,9 @@ void print_usage(const char *prog_name)
   printf("  -d <directory> Specify the web root directory (default: %s)\n", DIR_ROOT);
   printf("  -b             Run as a daemon in the background\n");
   printf("  -h             Display this help message\n");
+  printf("\nLogs:\n");
+  printf("  When running in foreground: logs are displayed in the terminal\n");
+  printf("  When running as daemon (-b): logs are saved to 'server.log' in the current directory and displayed in terminal\n");
 }
 
 void daemonize()
@@ -106,7 +115,21 @@ void daemonize()
     pid = fork();
 
     if (pid < 0) exit(EXIT_FAILURE); // Erro no fork
-    if (pid > 0) exit(EXIT_SUCCESS); // Processo pai termina
+    if (pid > 0) {
+        // Processo pai aguarda um pouco para o filho criar o arquivo PID
+        sleep(1);
+        
+        // Lê o PID do arquivo criado pelo daemon
+        FILE *pid_file = fopen("server.pid", "r");
+        if (pid_file != NULL) {
+            int daemon_pid;
+            if (fscanf(pid_file, "%d", &daemon_pid) == 1) {
+                printf("Daemon iniciado com PID: %d\n", daemon_pid);
+            }
+            fclose(pid_file);
+        }
+        exit(EXIT_SUCCESS);
+    }
 
     // Processo filho se torna líder da sessão
     if (setsid() < 0) exit(EXIT_FAILURE);
@@ -119,13 +142,30 @@ void daemonize()
     // Altera a máscara de modo de arquivo
     umask(0);
 
-    // Altera o diretório de trabalho atual
-    chdir("/");
+    // Mantém o diretório de trabalho atual para preservar caminhos relativos
 
     // Fecha todos os descritores de arquivo abertos
     for (int x = sysconf(_SC_OPEN_MAX); x >= 0; x--)
     {
         close(x);
+    }
+}
+
+void signal_handler(int signal)
+{
+    if (signal == SIGINT || signal == SIGTERM) {
+        server_running = 0;
+        printf("\n\x1b[31mStopped\x1b[0m\n");
+        
+        // Remove arquivo PID se existir
+        unlink("server.pid");
+        
+        // Fecha o socket do servidor para interromper o accept()
+        if (server_socket_fd != -1) {
+            close(server_socket_fd);
+        }
+        
+        exit(0); // Força o encerramento
     }
 }
 
@@ -171,16 +211,28 @@ int main(int argc, char *argv[])
   if (background)
   {
       daemonize();
+      
+      // Cria arquivo PID (o PID já foi exibido pelo processo pai)
+      FILE *pid_file = fopen("server.pid", "w");
+      if (pid_file != NULL) {
+          fprintf(pid_file, "%d\n", getpid());
+          fclose(pid_file);
+      }
   }
 
-  init_logger(background);
+  // Configura manipuladores de sinais para desligamento seguro
+  signal(SIGINT, signal_handler);  // Ctrl+C
+  signal(SIGTERM, signal_handler); // Comando kill
+
+  init_logger(background, "server.log");
 
   // Cria um socket e retorna seu descritor
   int socket_descriptor = createSocket();
+  server_socket_fd = socket_descriptor; // Armazena globalmente para o signal handler
 
   printf("\x1b[36m\x1b[3m🚀 Servidor pronto para aceitar conexões na porta %s servindo arquivos de %s\n\x1b[0m", PORT, DIR_ROOT);
 
-  for (;;)
+  while (server_running)
   {
     connection_info *conn_info = malloc(sizeof(connection_info));
     if (!conn_info)
@@ -194,7 +246,9 @@ int main(int argc, char *argv[])
 
     if (conn_info->client_fd < 0)
     {
-      perror("Falha ao aceitar conexão");
+      if (server_running) { // Só mostra erro se o servidor ainda está rodando
+        perror("Falha ao aceitar conexão");
+      }
       free(conn_info);
       continue;
     }
@@ -209,7 +263,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  // Esta parte é inalcançável no loop infinito atual, mas é uma boa prática
+  // Limpeza e encerramento
   close(socket_descriptor);
   free((char*)DIR_ROOT); // Libera a string duplicada
   return 0;

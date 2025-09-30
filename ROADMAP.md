@@ -62,3 +62,42 @@ Este roadmap foi concluído, servindo como um histórico do desenvolvimento inic
 ng degraded feature set UDP instead of TCP for DNS server 1.0.0.1.
 ng degraded feature set TCP instead of UDP for DNS server 1.1.1.1.
 
+
+## Resumo das Melhorias Implementadas
+
+   ### ✅ Refatoração e Eliminação de Redundâncias
+
+     * Removida lógica duplicada: Eliminada a transformação "/" → "/index.html" de utils/regex.c, mantendo apenas em utils/path.c
+     * Função httpResponse eliminada: Removidos methods/get/response.c e response.h, integrando a lógica diretamente em http_handler.c
+     * Tratamento de erro centralizado: Fluxo de erro 404 agora é claro e unificado
+     * Makefile atualizado: Removidas referências aos arquivos deletados
+
+   ### ✅ Sistema de Logging Melhorado
+
+     * Logs sempre no terminal: Logs aparecem no terminal tanto em modo foreground quanto daemon
+     * Arquivo de log correto: server.log criado no diretório atual (não na raiz do sistema)
+     * Help informativo: Documentação clara sobre onde os logs são salvos
+     * Logs coloridos: Verde para 200 OK, amarelo para 4xx, vermelho para 5xx
+
+   ### ✅ Desligamento Seguro
+
+     * Manipulação de sinais: SIGINT (Ctrl+C) e SIGTERM funcionando corretamente
+     * Exibição "Stopped": Mensagem clara de encerramento
+     * Limpeza de recursos: Socket fechado e arquivo PID removido ao encerrar
+
+   ### ✅ Gerenciamento PID Aprimorado
+
+     * PID correto exibido: Agora mostra o PID real do processo daemon
+     * Arquivo server.pid: Criado automaticamente em modo daemon
+     * Sincronização: PID no terminal e no arquivo são idênticos e funcionais
+     * Comando kill funciona: kill $(cat server.log) encerra o daemon corretamente
+
+   ### ✅ README.md Atualizado
+
+     * Instruções de encerramento: Documentadas as formas de parar o servidor
+     * Gerenciamento PID: Explicado o uso do arquivo server.pid
+     * Features atualizadas: Listadas todas as novas funcionalidades
+
+   Resultado: O código agora é mais limpo, eficiente, sem redundâncias, com logging
+   robusto e gerenciamento seguro de processos. Todas as funcionalidades foram
+   testadas e estão funcionando perfeitamente! 🚀

@@ -20,6 +20,15 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
     ./bin/server [options]
     ```
 
+3.  **Stop the server:**
+    ```bash
+    # Em modo foreground: pressione Ctrl+C
+    # Em modo daemon: use o PID exibido na inicialização ou arquivo server.pid
+    kill $(cat server.pid)
+    # ou manualmente:
+    kill <PID>
+    ```
+
 ### Opções de linha de comando
 
 | Option      | Description                                           | Default      |
@@ -45,6 +54,8 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
     - Returna `501 Not Implemented` para métodos não suportados.
 - **Logging:** Logs de requisições padronizadas no formato: `[timestamp] - [client_ip] - "[method] [path]" [status_code]`.
 - **Daemonization:** Pode rodar processos filhos em background.
+- **Desligamento seguro:** Manipula sinais SIGINT e SIGTERM para encerramento limpo.
+- **Gerenciamento PID:** Cria arquivo `server.pid` em modo daemon para facilitar o controle do processo.
 
 ---
 Para mais detalhes, veja o diretório `docs`.

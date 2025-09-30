@@ -58,4 +58,4 @@ Servidor escrito em C com suporte a multi-threaded para servir arquivos estátic
 - **Gerenciamento PID:** Cria arquivo `server.pid` em modo daemon para facilitar o controle do processo.
 
 ---
-Para mais detalhes, veja o diretório `docs`.
+Para mais detalhes, veja o diretório ![**docs**](docs/index.md).

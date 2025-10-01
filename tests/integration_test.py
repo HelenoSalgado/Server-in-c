@@ -16,7 +16,7 @@ class IntegrationTest:
     def start_server(self, port=DEFAULT_PORT, doc_root=DEFAULT_DOC_ROOT):
         print(f"Iniciando servidor na porta {port} com diretório raiz {doc_root}...")
         command = [SERVER_PATH, "-p", str(port), "-d", doc_root]
-        self.server_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.server_process = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stderr)
 
         # Wait for the server to start listening
         for i in range(30): # Try for up to 30 seconds
@@ -90,7 +90,8 @@ class IntegrationTest:
         response = requests.get(f"{self.base_url}/non_existent.html")
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
         assert "text/html" in response.headers["Content-Type"], f"Expected Content-Type text/html, got {response.headers['Content-Type']}"
-        assert "404 Not Found" in response.text, "Expected '404 Not Found' in body"
+        response.encoding = 'utf-8'
+        assert "Página não encontrada" in response.text, "Expected 'Página não encontrada' in body"
 
     def test_head_existing_file(self):
         response = requests.head(f"{self.base_url}/index.html")

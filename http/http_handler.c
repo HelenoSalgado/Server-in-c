@@ -3,6 +3,7 @@
 #include "http_handler.h"
 #include "../utils/regex.h"
 #include "../utils/logger.h"
+#include "../utils/logger.h"
 #include "../utils/path.h"
 #include <unistd.h>
 #include <stdio.h>
@@ -29,56 +30,53 @@ void handle_get_request(http_context *ctx) {
     int fd = -1;
     ssize_t sizeFile = 0;
 
-    int sanitize_result = sanitize_path(DIR_ROOT, ctx->path, sanitized_path, sizeof(sanitized_path));
+    if (sanitize_path(DIR_ROOT, ctx->path, sanitized_path, sizeof(sanitized_path)) == 0) {
+        fd = open(sanitized_path, O_RDONLY);
+    } else {
+        fd = -1; // Garante que fd seja -1 se a sanitização falhar
+    }
 
-    if (sanitize_result != 0) {
-        // Tenta servir página de erro 404 personalizada
-        fd = open(PAGE_NOT_FOUND, O_RDONLY);
+    if (fd != -1) {
+        // Arquivo encontrado e aberto com sucesso
+        sizeFile = read(fd, ctx->buffer, sizeof(ctx->buffer) - 1);
+        close(fd);
+        if (sizeFile < 0) {
+            send_error_response(ctx, "500 Internal Server Error", "<html><body><h1>500 Internal Server Error</h1></body></html>");
+            return;
+        }
+        ctx->buffer[sizeFile] = '\0';
+        strncpy(ctx->status_msg, "200 OK", sizeof(ctx->status_msg) - 1);
+        verifyMimeType(sanitized_path, ctx->mimeType, sizeof(ctx->mimeType));
+    } else {
+        // Arquivo não encontrado ou erro de sanitização, tenta servir 404.html
+        char path_404[PATH_MAX];
+        snprintf(path_404, sizeof(path_404), "%s%s", DIR_ROOT, PAGE_NOT_FOUND);
+        fd = open(path_404, O_RDONLY);
         if (fd != -1) {
+            sizeFile = read(fd, ctx->buffer, sizeof(ctx->buffer) - 1);
+            close(fd);
+            if (sizeFile < 0) {
+                send_error_response(ctx, "500 Internal Server Error", "<html><body><h1>500 Internal Server Error</h1></body></html>");
+                return;
+            }
+            ctx->buffer[sizeFile] = '\0';
             strncpy(ctx->status_msg, "404 Not Found", sizeof(ctx->status_msg) - 1);
-            ctx->status_msg[sizeof(ctx->status_msg) - 1] = '\0';
             strncpy(ctx->mimeType, "text/html", sizeof(ctx->mimeType) - 1);
-            ctx->mimeType[sizeof(ctx->mimeType) - 1] = '\0';
         } else {
+            // Se nem o 404.html for encontrado, envia uma resposta 404 genérica
             send_error_response(ctx, "404 Not Found", "<html><body><h1>404 Not Found</h1></body></html>");
             return;
         }
-    } else {
-        fd = open(sanitized_path, O_RDONLY);
-        if (fd != -1) {
-            strncpy(ctx->status_msg, "200 OK", sizeof(ctx->status_msg) - 1);
-            ctx->status_msg[sizeof(ctx->status_msg) - 1] = '\0';
-            verifyMimeType(sanitized_path, ctx->mimeType, sizeof(ctx->mimeType));
-        } else {
-            // Tenta servir página de erro 404 personalizada
-            fd = open(PAGE_NOT_FOUND, O_RDONLY);
-            if (fd != -1) {
-                strncpy(ctx->status_msg, "404 Not Found", sizeof(ctx->status_msg) - 1);
-                ctx->status_msg[sizeof(ctx->status_msg) - 1] = '\0';
-                strncpy(ctx->mimeType, "text/html", sizeof(ctx->mimeType) - 1);
-                ctx->mimeType[sizeof(ctx->mimeType) - 1] = '\0';
-            } else {
-                send_error_response(ctx, "404 Not Found", "<html><body><h1>404 Not Found</h1></body></html>");
-                return;
-            }
-        }
     }
 
-    sizeFile = read(fd, ctx->buffer, sizeof(ctx->buffer) - 1);
-    close(fd);
-    
-    if (sizeFile < 0) {
-        send_error_response(ctx, "500 Internal Server Error", "<html><body><h1>500 Internal Server Error</h1></body></html>");
-        return;
-    }
-    
-    ctx->buffer[sizeFile] = '\0';
+    ctx->status_msg[sizeof(ctx->status_msg) - 1] = '\0';
+    ctx->mimeType[sizeof(ctx->mimeType) - 1] = '\0';
 
     snprintf(ctx->headers, sizeof(ctx->headers), "HTTP/1.1 %s\r\nContent-Type: %s\r\nContent-Length: %zd\r\nConnection: close\r\n\r\n", ctx->status_msg, ctx->mimeType, sizeFile);
 
     if (strcmp(ctx->method, "GET") == 0) {
         snprintf(ctx->data, sizeof(ctx->data), "%s%s", ctx->headers, ctx->buffer);
-    } else {
+    } else { // HEAD
         snprintf(ctx->data, sizeof(ctx->data), "%s", ctx->headers);
     }
 }

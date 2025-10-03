@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+    <name>Salop Web Server</name>
+    <version>1.0.0</version>
+    <description>Servidor web em C com suporte multi-threading</description>
+    
+    <features>
+        <feature name="multi-threading">true</feature>
+        <feature name="http-1.1">true</feature>
+        <feature name="static-files">true</feature>
+        <feature name="daemon-mode">true</feature>
+        <feature name="logging">true</feature>
+        <feature name="path-traversal-protection">true</feature>
+    </features>
+    
+    <mime-types>
+        <category name="images">
+            <type ext="png">image/png</type>
+            <type ext="jpg">image/jpeg</type>
+            <type ext="jpeg">image/jpeg</type>
+            <type ext="gif">image/gif</type>
+            <type ext="ico">image/x-icon</type>
+            <type ext="bmp">image/bmp</type>
+            <type ext="svg">image/svg+xml</type>
+            <type ext="webp">image/webp</type>
+        </category>
+        
+        <category name="fonts">
+            <type ext="woff">font/woff</type>
+            <type ext="woff2">font/woff2</type>
+            <type ext="ttf">font/ttf</type>
+            <type ext="otf">font/otf</type>
+            <type ext="eot">application/vnd.ms-fontobject</type>
+        </category>
+        
+        <category name="media">
+            <type ext="mp4">video/mp4</type>
+            <type ext="webm">video/webm</type>
+            <type ext="mp3">audio/mpeg</type>
+            <type ext="wav">audio/wav</type>
+            <type ext="ogg">audio/ogg</type>
+        </category>
+    </mime-types>
+    
+    <status>active</status>
+    <last-updated>2024-10-02</last-updated>
+</server>

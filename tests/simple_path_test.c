@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h> // For system()
 #include <unistd.h> // For getpid()
-#include "../utils/path.h"
+#include "path.h"
 
 // Códigos de cor ANSI
 #define VERDE "\033[32m"

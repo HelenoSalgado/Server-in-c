@@ -4,7 +4,8 @@ import requests
 import os
 import sys
 
-SERVER_PATH = "./bin/server"
+# Permite sobrescrever o caminho do servidor via variável de ambiente
+SERVER_PATH = os.environ.get('SALOP_SERVER_PATH', './bin/server')
 DEFAULT_PORT = 8080
 DEFAULT_DOC_ROOT = "./web"
 

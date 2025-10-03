@@ -1,0 +1,21 @@
+{
+  "server": "Salop Web Server",
+  "version": "1.0.0",
+  "features": [
+    "Multi-threading",
+    "HTTP/1.1 compliance",
+    "Static file serving",
+    "Extended MIME type support",
+    "Daemon mode",
+    "Security (path traversal protection)"
+  ],
+  "mime_types": {
+    "images": ["png", "jpg", "jpeg", "gif", "ico", "bmp", "svg", "webp"],
+    "fonts": ["woff", "woff2", "ttf", "otf", "eot"],
+    "media": ["mp4", "webm", "mp3", "wav", "ogg"],
+    "documents": ["pdf", "txt", "md"],
+    "archives": ["zip", "gz"]
+  },
+  "status": "active",
+  "last_updated": "2024-10-02"
+}
